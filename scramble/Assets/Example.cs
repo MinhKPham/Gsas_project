@@ -34,8 +34,8 @@ public class Example : MonoBehaviour
 	//to adjust the sensitivity
 	void onOnbeatDetected ()
 	{
-        print("beat");
-        spec.beat = true;
+        //print("beat");
+        //spec.beat = true;
 	}
 
 	//This event will be called every frame while music is playing

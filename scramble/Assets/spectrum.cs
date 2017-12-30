@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public class spectrum : MonoBehaviour
 {
     //framerate
+    private float Ra=-1f;
     public float beatcooldown=0;
     public bool beat = false;
     public Text t;
@@ -18,8 +19,8 @@ public class spectrum : MonoBehaviour
     public int limit = 0;
     private float beattime = 0;
     public GameObject parent;
-    private float radius = 150f;
-    private float inout = 1;
+    public float radius = 600f;
+    private float inout = 0.004f;
     public Text text;
     public GameObject thing;
     public float size = 10.0f;
@@ -28,6 +29,7 @@ public class spectrum : MonoBehaviour
     public int cutoffSample = 128; //MUST BE LOWER THAN SAMPLE SIZE
     public FFTWindow fftWindow;
     public GameObject bar;
+    private float scale = 0.3f;
     //public GameObject top;
     List<GameObject> bars;
     List<Vector3> oriscales;
@@ -57,12 +59,13 @@ public class spectrum : MonoBehaviour
             //tops.Add(Instantiate(top, new Vector3(i * top.transform.localScale.x * 1.2f - size / 2, 10, 0), Quaternion.identity));
             //bars2.Add(Instantiate(bar, new Vector3(i * bar.transform.localScale.x * 1.2f - size / 2, 5, 40), Quaternion.identity));
             cooldown[i] = 0.5f;
-            Vector2 pos;
-            Vector2 center = new Vector2(0, 0);
+            Vector3 pos;
+            Vector3 center = new Vector3(0, 0,0);
             pos.x = center.x + radius * Mathf.Sin(360.0f/cutoffSample*i * Mathf.Deg2Rad);
             pos.y = center.y + radius * Mathf.Cos(360.0f/cutoffSample*i * Mathf.Deg2Rad);
+            pos.z = 0;
 
-            bars.Add(Instantiate(bar, new Vector2(pos.x,pos.y), Quaternion.identity));
+            bars.Add(Instantiate(bar, new Vector3(pos.x,pos.y,pos.z), Quaternion.identity));
         }
         for (int i = 0; i < cutoffSample; i++)
         {
@@ -73,12 +76,22 @@ public class spectrum : MonoBehaviour
             bars[i].transform.parent = parent.transform;
         }
         AudioListener.GetSpectrumData(samples01, 0, fftWindow);
+        AudioProcessor processor = FindObjectOfType<AudioProcessor>();
+        processor.onBeat.AddListener(onOnbeatDetected);
         
+
+    }
+    void onOnbeatDetected()
+    {
+        print("beat");
+        beat = true;
+
     }
 
     // Update is called once per frame
     void Update()
     {
+       
         beattime += Time.deltaTime;
         
         if (m_timeCounter < m_refreshTime)
@@ -94,9 +107,10 @@ public class spectrum : MonoBehaviour
             m_timeCounter = 0.0f;
         }
         
-        if (radius >= 80f) { inout = -1f; }
-        if (radius <= 40f) { inout = 1f; }
-        radius += 0.2f*inout;
+        if (scale >= 0.4f) { inout = -0.004f; }
+        if (scale <= 0.04f) { inout = 0.004f; }
+        scale += inout;
+        parent.transform.localScale = new Vector3(scale, scale, 1);
         for (int x = 0; x < cutoffSample; x++)
         {
             //bars.Add(Instantiate(bar, new Vector3(i * bar.transform.localScale.x * 1.2f - cutoffSample * bar.transform.localScale.x * 1.2f*0.5f, 5, 0), Quaternion.identity));
@@ -134,30 +148,48 @@ public class spectrum : MonoBehaviour
             //if (samples[i] * amplitude > max) max = samples[i] * amplitude;
             float result = (samples[i] - samples01[i]) * amplitude;
             result = samples[i] * amplitude;
-            if (result >= 10) result = 10;
+            if (result >= 6) result = 6;
             //print(result);
             //if (result < 1) result = 1;
+            if (i>0 && samples[i - 1] * amplitude <= result && samples[i + 1] * amplitude <= result &&
+                result > 1f &&
+                beat && beattime >= beatcooldown &&
+                spawn < limit && cooldown[i] == cool)
+            {
 
-            if (result > 1f && beat && beattime>=beatcooldown && spawn<limit && cooldown[i]==cool) {
+                GameObject shoot = Instantiate(thing, new Vector3(tx, ty, tz+150), Quaternion.identity);
+                shoot.GetComponent<follow>().rate *= 1.5f * result;
+                shoot.transform.rotation = bars[i].transform.rotation;
+                cooldown[i] = 0;
+                reset = true;
+                i += 8;
+                spawn++;
+            }
+
+            if (i==0 && samples[i + 1] * amplitude <= result &&
+                result > 1f &&
+                beat && beattime>=beatcooldown && 
+                spawn<limit && cooldown[i]==cool) {
                 
-                GameObject shoot = Instantiate(thing, new Vector3(tx,ty,tz-10), Quaternion.identity);
+                GameObject shoot = Instantiate(thing, new Vector3(tx,ty,tz+150), Quaternion.identity);
                 shoot.GetComponent<follow>().rate *= 1.5f*result;
                 shoot.transform.rotation = bars[i].transform.rotation;
                 cooldown[i] = 0;
                 reset = true;
-                
+                i += 8;
                 spawn++;
             }
+
             
 
             //bars2[i].transform.localScale = new Vector3(bars2[i].transform.localScale.x, result * 10, bars2[i].transform.localScale.z);
-            float final = oriscales[i].x * resultor;
-            if (final <= 5f) final = 5f;
+            //float final = oriscales[i].x * resultor;
+            //if (final <= 5f) final = 5f;
             //bars[i].transform.localScale = new Vector3(final, bars[i].transform.localScale.y, bars[i].transform.localScale.z);
             //bars[i].GetComponent<addforce>().force = result * 200;
             
             
-            i += 5;
+            
            
         }
         for (i = 0; i < cutoffSample; i++)

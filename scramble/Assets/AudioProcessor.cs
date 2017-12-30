@@ -140,7 +140,26 @@ public class AudioProcessor : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
 	{
-		if (audioSource.isPlaying) {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            initArrays();
+
+            audioSource = GetComponent<AudioSource>();
+            samplingRate = audioSource.clip.frequency;
+
+            framePeriod = (float)bufferSize / (float)samplingRate;
+
+            //initialize record of previous spectrum
+            spec = new float[nBand];
+            for (int i = 0; i < nBand; ++i)
+                spec[i] = 100.0f;
+
+            auco = new Autoco(maxlag, decay, framePeriod, getBandWidth());
+
+            lastT = getCurrentTimeMillis();
+        }
+            
+        if (audioSource.isPlaying) {
 			audioSource.GetSpectrumData (spectrum, 0, FFTWindow.BlackmanHarris);
 			computeAverages (spectrum);
 			onSpectrum.Invoke (averages);
