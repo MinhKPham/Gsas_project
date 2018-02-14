@@ -83,7 +83,7 @@ public class spectrum : MonoBehaviour
     }
     void onOnbeatDetected()
     {
-        print("beat");
+        //print("beat");
         beat = true;
 
     }

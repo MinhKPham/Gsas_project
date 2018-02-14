@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 [AddComponentMenu("Camera/Simple Smooth Mouse Look ")]
@@ -47,8 +43,12 @@ public class mouselook : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown("space"))
+        
+        sensitivity.y = sensitivity.x;
+        //print("DDDds");
+        if (Input.GetKeyDown(KeyCode.Space))
         {
+            print("DDD");
             i++;
             if (i >= list.Length) i = 0;
             ac.clip = list[i];
@@ -62,10 +62,10 @@ public class mouselook : MonoBehaviour
             Cursor.lockState = CursorLockMode.Locked;
         }
         if (Input.GetKey("right"))
-            sensitivity+=new Vector2(0.002f,0.01f);
+            sensitivity+=new Vector2(0.002f,0.002f);
 
         else if (Input.GetKey("left"))
-            sensitivity -= new Vector2(0.002f, 0.01f);
+            sensitivity -= new Vector2(0.002f, 0.002f);
         if (sensitivity.x <= 0f) sensitivity = new Vector2(0f, 0f);
         if (sensitivity.x >= 10f) sensitivity = new Vector2(10f, 10f);
         sen.text = "mouse sen " + sensitivity.x;
@@ -73,7 +73,7 @@ public class mouselook : MonoBehaviour
         line.enabled = false;
         if (Physics.Raycast(transform.position, transform.forward, out hit))
         {
-            print("Found an object - distance: " + hit.distance);
+            print("Found an object - distance: " + hit.collider.gameObject.name);
             if (Input.GetMouseButton(0))
             {
                 line.enabled = true;
@@ -97,9 +97,10 @@ public class mouselook : MonoBehaviour
         mouseDelta = Vector2.Scale(mouseDelta, new Vector2(sensitivity.x * smoothing.x, sensitivity.y * smoothing.y));
 
         // Interpolate mouse movement over time to apply smoothing delta.
+        _smoothMouse.x = Mathf.Lerp(_smoothMouse.x, mouseDelta.x, 1f / smoothing.x);
+        _smoothMouse.y = Mathf.Lerp(_smoothMouse.y, mouseDelta.y, 1f / smoothing.y);
         _smoothMouse.x = mouseDelta.x;
         _smoothMouse.y = mouseDelta.y;
-
         // Find the absolute mouse movement value from point zero.
         _mouseAbsolute += _smoothMouse;
 

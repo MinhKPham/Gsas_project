@@ -142,6 +142,7 @@ public class AudioProcessor : MonoBehaviour
 	{
         if (Input.GetKeyDown(KeyCode.Space))
         {
+            now = 0;
             initArrays();
 
             audioSource = GetComponent<AudioSource>();
@@ -157,6 +158,8 @@ public class AudioProcessor : MonoBehaviour
             auco = new Autoco(maxlag, decay, framePeriod, getBandWidth());
 
             lastT = getCurrentTimeMillis();
+            
+            return;
         }
             
         if (audioSource.isPlaying) {
